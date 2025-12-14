@@ -1,5 +1,5 @@
 {
-  "name": "灵魂成分鉴定所",
+  "name": "harveyblocks.github.io",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -8,12 +8,10 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "dependencies": {
-
-  },
   "devDependencies": {
     "@types/node": "^22.14.0",
-    
+    "lucide-react": "^0.561.0",
+    "react-dom": "^19.2.3",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }
