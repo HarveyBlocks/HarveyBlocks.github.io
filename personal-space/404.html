@@ -4,23 +4,25 @@
     <meta charset="utf-8">
     <title>Harvey Blocks' Space</title>
     <script type="text/javascript">
-      // Agnostic 404 redirect for GitHub Pages
-      var l = window.location;
-      var path = l.pathname;
-      
-      // Calculate how many segments to keep based on the current URL structure
-      // For user.github.io/repo/, the path starts with /repo/
-      // We want to redirect to /repo/?p=/rest/of/path
-      var segments = path.split('/').filter(Boolean);
-      var repoName = segments[0]; // Assuming repo name is the first segment
-      
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        '/' + repoName + '/?p=' +
-        segments.slice(1).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
+      // 404.html to handle deep-linked paths in GitHub Pages subdirectories
+      (function() {
+        var l = window.location;
+        var path = l.pathname;
+        var segments = path.split('/').filter(Boolean);
+        
+        // Assume the first segment is the repo name for GitHub Pages project sites
+        // e.g. /my-space/path/to/doc.md -> repoName = 'my-space', docPath = '/path/to/doc.md'
+        var repoName = segments[0] || '';
+        var docPath = '/' + segments.slice(1).join('/');
+        
+        // Redirect back to the repository root with the path as a query parameter
+        var destination = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+                          '/' + repoName + '/?p=' + encodeURIComponent(docPath) +
+                          (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+                          l.hash;
+                          
+        l.replace(destination);
+      })();
     </script>
   </head>
   <body>
