@@ -7,8 +7,8 @@
     <!-- Single Page Apps for GitHub Pages -->
     <script type="text/javascript">
       /**
-       * Dynamic Path Restoration and Asset Path Fixer.
-       * Fixes routing without breaking anchor links by avoiding the <base> tag.
+       * Asset path fixer for GitHub Pages.
+       * Deferring URL restoration to React to ensure anchors (#) are handled perfectly.
        */
       (function(l) {
         // 1. Calculate project root (e.g., /personal-space/)
@@ -16,34 +16,14 @@
         var repoName = segments[0] || '';
         var repoRoot = '/' + repoName + (repoName ? '/' : '');
 
-        // 2. Fix asset loading: Manually rewrite relative URLs to be absolute from root
-        // This avoids the <base> tag which breaks document-relative anchors (#).
-        window.addEventListener('DOMContentLoaded', function() {
-          var assets = document.querySelectorAll('link[href^="./"], script[src^="./"]');
-          for (var i = 0; i < assets.length; i++) {
-            var el = assets[i];
-            var attr = el.hasAttribute('href') ? 'href' : 'src';
-            var path = el.getAttribute(attr);
-            el.setAttribute(attr, repoRoot + path.slice(2));
-          }
+        // 2. Fix asset loading BEFORE anything is parsed
+        // We use document.write to inject a <base> tag temporarily for ASSETS ONLY
+        // then remove it immediately to avoid breaking document-relative anchors.
+        document.write('<base href="' + repoRoot + '">');
+        window.addEventListener('load', function() {
+          var base = document.querySelector('base');
+          if (base) base.parentNode.removeChild(base);
         });
-
-        // 3. Restore path from 404.html redirection (?p=...)
-        if (l.search[1] === 'p') {
-          var params = l.search.slice(3).split('&');
-          var docPath = decodeURIComponent(params[0]).replace(/^\//, '');
-          var query = params[1] ? '?' + params[1].replace(/~and~/g, '&') : '';
-          
-          // Construct absolute path: /repo/dir/file.md
-          var finalPath = repoRoot + docPath;
-          
-          // Ensure no trailing slash if docPath exists (prevents .../file.md/#hash)
-          if (docPath && finalPath.endsWith('/')) {
-            finalPath = finalPath.slice(0, -1);
-          }
-          
-          window.history.replaceState(null, null, finalPath + query + l.hash);
-        }
       }(window.location))
     </script>
     <link rel="icon" href="https://avatars.githubusercontent.com/u/153526791?s=400&amp;u=4ee0bbf2a7f7737f5f1503c67547d8dc1eac2a94&amp;v=4" type="image/png">
@@ -115,10 +95,10 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="./assets/index-qwn0rv-z.js"></script>
+  <script type="module" crossorigin src="./assets/index-BY7RI0A5.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/vendor-react-CN8MCXWJ.js">
   <link rel="modulepreload" crossorigin href="./assets/vendor-markdown-BznfBkTa.js">
-  <link rel="modulepreload" crossorigin href="./assets/vendor-utils-Bf4APmIy.js">
+  <link rel="modulepreload" crossorigin href="./assets/vendor-utils-D-1xefkj.js">
   <link rel="modulepreload" crossorigin href="./assets/vendor-mermaid-C9i9HjiV.js">
   <link rel="stylesheet" crossorigin href="./assets/index-bY29xigc.css">
 </head>

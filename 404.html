@@ -18,14 +18,13 @@
             var repoName = segments[0] || '';
             
             if (repoName) {
-                // The rest is the document path (multiple levels possible)
-                var docPath = '/' + segments.slice(1).join('/');
+                // Combine path and hash into one documentation pointer
+                var docPathWithHash = '/' + segments.slice(1).join('/') + l.hash;
                 
                 // Redirect back to project root with document path as parameter
                 var destination = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-                                  '/' + repoName + '/?p=' + encodeURIComponent(docPath) +
-                                  (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-                                  l.hash;
+                                  '/' + repoName + '/?p=' + encodeURIComponent(docPathWithHash) +
+                                  (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '');
                 
                 l.replace(destination);
             }
