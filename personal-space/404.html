@@ -4,15 +4,20 @@
     <meta charset="utf-8">
     <title>Harvey Blocks' Space</title>
     <script type="text/javascript">
-      // This script converts the 404 path into a query parameter
-      // e.g. /getting-started/welcome.md -> /?p=/getting-started/welcome.md
-      var pathSegmentsToKeep = 0;
-
+      // Agnostic 404 redirect for GitHub Pages
       var l = window.location;
+      var path = l.pathname;
+      
+      // Calculate how many segments to keep based on the current URL structure
+      // For user.github.io/repo/, the path starts with /repo/
+      // We want to redirect to /repo/?p=/rest/of/path
+      var segments = path.split('/').filter(Boolean);
+      var repoName = segments[0]; // Assuming repo name is the first segment
+      
       l.replace(
         l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?p=' +
-        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+        '/' + repoName + '/?p=' +
+        segments.slice(1).join('/').replace(/&/g, '~and~') +
         (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
         l.hash
       );
