@@ -14,28 +14,20 @@
             var path = l.pathname;
             var segments = path.split('/').filter(Boolean);
             
-            // The first segment is the project/repository directory name (e.g., /personal-space/)
+            // The first segment is ALWAYS the project name (one level deep)
             var repoName = segments[0] || '';
             
-            // Logic for projects using the 'index.html path restoration' strategy.
-            // You can add more project names to this array if they share the same logic.
-            var supportedProjects = ['personal-space']; 
-            
-            if (supportedProjects.indexOf(repoName) !== -1) {
-                // Extract the document path excluding the repo name
+            if (repoName) {
+                // The rest is the document path (multiple levels possible)
                 var docPath = '/' + segments.slice(1).join('/');
                 
-                // Redirect to the sub-project root with the 'p' parameter
-                // Result: https://username.github.io/repo-name/?p=/path/to/doc.md
+                // Redirect back to project root with document path as parameter
                 var destination = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
                                   '/' + repoName + '/?p=' + encodeURIComponent(docPath) +
                                   (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
                                   l.hash;
                 
                 l.replace(destination);
-            } else {
-                // For root level or unsupported project 404s, you might want to redirect to a main home page
-                // console.log("Path not recognized by multi-project redirector.");
             }
         })();
     </script>
