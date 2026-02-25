@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Harvey Blocks' Space</title>
+    <script type="text/javascript">
+      (function() {
+        var l = window.location;
+        
+        /**
+         * Core Logic: Dynamically identify "Project Root Path"
+         * Whether deployed at / or /any-sub-dir/, this script assumes 404.html is at the project root.
+         * We infer the project root by looking at the current URL structure.
+         */
+        
+        // 1. Get current full path segments
+        var path = l.pathname; // e.g., /my-space/some/deep/path.md
+        
+        // 2. Identify the base path (repo name for GitHub Pages)
+        // We assume the first segment is the repository name for project sites.
+        var segments = path.split('/').filter(Boolean);
+        var repoName = segments[0] || ''; 
+        
+        // The rest is the resource path
+        var docPath = '/' + segments.slice(1).join('/');
+        
+        var destination = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+                          '/' + repoName + '/?p=' + encodeURIComponent(docPath) +
+                          (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+                          l.hash;
+                          
+        l.replace(destination);
+      })();
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
