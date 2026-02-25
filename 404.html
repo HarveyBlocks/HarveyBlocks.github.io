@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>GitHub Pages Multi-Project Redirector</title>
+    <script type="text/javascript">
+        /**
+         * Global 404 Redirector for GitHub Pages Repository Root.
+         * This script identifies which sub-project triggered the 404 and redirects 
+         * back to that project's index.html with the path encoded as a parameter.
+         */
+        (function() {
+            var l = window.location;
+            var path = l.pathname;
+            var segments = path.split('/').filter(Boolean);
+            
+            // The first segment is the project/repository directory name (e.g., /personal-space/)
+            var repoName = segments[0] || '';
+            
+            // Logic for projects using the 'index.html path restoration' strategy.
+            // You can add more project names to this array if they share the same logic.
+            var supportedProjects = ['personal-space']; 
+            
+            if (supportedProjects.indexOf(repoName) !== -1) {
+                // Extract the document path excluding the repo name
+                var docPath = '/' + segments.slice(1).join('/');
+                
+                // Redirect to the sub-project root with the 'p' parameter
+                // Result: https://username.github.io/repo-name/?p=/path/to/doc.md
+                var destination = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+                                  '/' + repoName + '/?p=' + encodeURIComponent(docPath) +
+                                  (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+                                  l.hash;
+                
+                l.replace(destination);
+            } else {
+                // For root level or unsupported project 404s, you might want to redirect to a main home page
+                // console.log("Path not recognized by multi-project redirector.");
+            }
+        })();
+    </script>
+</head>
+<body>
+    Redirecting to project...
+</body>
+</html>
