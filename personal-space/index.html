@@ -6,17 +6,43 @@
     <title>Harvey Blocks' Space</title>
     <!-- Single Page Apps for GitHub Pages -->
     <script type="text/javascript">
+      /**
+       * Dynamic Path Restoration and Asset Path Fixer.
+       * Fixes routing without breaking anchor links by avoiding the <base> tag.
+       */
       (function(l) {
+        // 1. Calculate project root (e.g., /personal-space/)
+        var segments = l.pathname.split('/').filter(Boolean);
+        var repoName = segments[0] || '';
+        var repoRoot = '/' + repoName + (repoName ? '/' : '');
+
+        // 2. Fix asset loading: Manually rewrite relative URLs to be absolute from root
+        // This avoids the <base> tag which breaks document-relative anchors (#).
+        window.addEventListener('DOMContentLoaded', function() {
+          var assets = document.querySelectorAll('link[href^="./"], script[src^="./"]');
+          for (var i = 0; i < assets.length; i++) {
+            var el = assets[i];
+            var attr = el.hasAttribute('href') ? 'href' : 'src';
+            var path = el.getAttribute(attr);
+            el.setAttribute(attr, repoRoot + path.slice(2));
+          }
+        });
+
+        // 3. Restore path from 404.html redirection (?p=...)
         if (l.search[1] === 'p') {
           var params = l.search.slice(3).split('&');
-          var docPath = decodeURIComponent(params[0]);
+          var docPath = decodeURIComponent(params[0]).replace(/^\//, '');
           var query = params[1] ? '?' + params[1].replace(/~and~/g, '&') : '';
           
-          // Project root is the current pathname (e.g., /project-name/)
-          var repoRoot = l.pathname.endsWith('/') ? l.pathname.slice(0, -1) : l.pathname;
+          // Construct absolute path: /repo/dir/file.md
+          var finalPath = repoRoot + docPath;
           
-          // Construct full URL and restore state
-          window.history.replaceState(null, null, repoRoot + docPath + query + l.hash);
+          // Ensure no trailing slash if docPath exists (prevents .../file.md/#hash)
+          if (docPath && finalPath.endsWith('/')) {
+            finalPath = finalPath.slice(0, -1);
+          }
+          
+          window.history.replaceState(null, null, finalPath + query + l.hash);
         }
       }(window.location))
     </script>
