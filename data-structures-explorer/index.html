@@ -4,6 +4,29 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Google AI Studio App</title>
+    <!-- Single Page Apps for GitHub Pages -->
+    <script type="text/javascript">
+      /**
+       * Asset path fixer for GitHub Pages.
+       * Deferring URL restoration to React to ensure anchors (#) are handled perfectly.
+       */
+      (function(l) {
+        // 1. Calculate project root (e.g., /personal-space/)
+        var segments = l.pathname.split('/').filter(Boolean);
+        var repoName = segments[0] || '';
+        var repoRoot = '/' + repoName + (repoName ? '/' : '');
+
+        // 2. Fix asset loading BEFORE anything is parsed
+        // We use document.write to inject a <base> tag temporarily for ASSETS ONLY
+        // then remove it immediately to avoid breaking document-relative anchors.
+        document.write('<base href="' + repoRoot + '">');
+        window.addEventListener('load', function() {
+          var base = document.querySelector('base');
+          if (base) base.parentNode.removeChild(base);
+        });
+      }(window.location))
+    </script>
+    <link rel="icon" href="https://avatars.githubusercontent.com/u/153526791?s=400&amp;u=4ee0bbf2a7f7737f5f1503c67547d8dc1eac2a94&amp;v=4" type="image/png">
     <script type="module" crossorigin src="./assets/index-DH_WBzS3.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-D869Ltdd.css">
   </head>
