@@ -13,7 +13,9 @@
       (function(l) {
         // 1. Calculate project root (e.g., /personal-space/)
         var segments = l.pathname.split('/').filter(Boolean);
-        var repoName = segments[0] || '';
+        // The first segment is likely the project name, but skip common files
+        var firstSegment = segments[0] || '';
+        var repoName = (firstSegment && !firstSegment.match(/\.(html|php|js|css)$/)) ? firstSegment : '';
         var repoRoot = '/' + repoName + (repoName ? '/' : '');
 
         // 2. Fix asset loading BEFORE anything is parsed
@@ -95,7 +97,7 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="./assets/index-CulCLXH4.js"></script>
+  <script type="module" crossorigin src="./assets/index-DGP7AGZx.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/vendor-react-CN8MCXWJ.js">
   <link rel="modulepreload" crossorigin href="./assets/vendor-markdown-BznfBkTa.js">
   <link rel="modulepreload" crossorigin href="./assets/vendor-utils-DB2jlQsH.js">

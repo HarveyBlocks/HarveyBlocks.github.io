@@ -11,11 +11,22 @@
          */
         (function() {
             var l = window.location;
+            var search = l.search;
+
+            // CRITICAL: If the URL already contains our redirect parameter 'p=', 
+            // it means we've already redirected once and it FAILED to find an index.html.
+            // Stop here to avoid an infinite loop and show a real 404 page.
+            if (search.indexOf('p=') !== -1) {
+                return;
+            }
+
             var path = l.pathname;
             var segments = path.split('/').filter(Boolean);
             
-            // The first segment is ALWAYS the project name (one level deep)
-            var repoName = segments[0] || '';
+            // The first segment is likely the project name (one level deep)
+            // We exclude common files to avoid incorrect redirection at the root level
+            var firstSegment = segments[0] || '';
+            var repoName = (firstSegment && !firstSegment.match(/\.(html|php|js|css)$/)) ? firstSegment : '';
             
             if (repoName) {
                 // Combine path and hash into one documentation pointer
@@ -24,14 +35,26 @@
                 // Redirect back to project root with document path as parameter
                 var destination = l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
                                   '/' + repoName + '/?p=' + encodeURIComponent(docPathWithHash) +
-                                  (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '');
+                                  (search ? '&q=' + search.slice(1).replace(/&/g, '~and~') : '');
                 
                 l.replace(destination);
             }
         })();
     </script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f9fafb; color: #111827; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        .container { padding: 2rem; }
+        h1 { font-size: 4rem; margin: 0; color: #374151; }
+        p { font-size: 1.25rem; color: #6b7280; margin: 1rem 0 2rem; }
+        a { color: #14b8a6; text-decoration: none; font-weight: 500; }
+        a:hover { text-decoration: underline; }
+    </style>
 </head>
 <body>
-    Redirecting to project...
+    <div class="container">
+        <h1>404</h1>
+        <p>The page you are looking for doesn't exist.</p>
+        <a href="/">Go back home</a>
+    </div>
 </body>
 </html>
