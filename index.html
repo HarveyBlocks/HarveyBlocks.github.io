@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Repository Navigation</title>
+</head>
+<body>
+<h1>📁 文件导航</h1>
+<div id="file-list">加载中...</div>
+<script>
+    const owner = 'HarveyBlocks';       // 替换为你的 GitHub 用户名
+    const repo = 'HarveyBlocks.github.io';        // 替换为仓库名（通常是 your-username.github.io）
+    const branch = 'main';                 // 默认分支
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
+
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            const files = data.tree.filter(item => item.type === 'blob'); // 只取文件
+            const list = document.getElementById('file-list');
+            list.innerHTML = '<ul>' + files.map(file =>
+                `<li><a href="/${file.path}">${file.path}</a></li>`
+            ).join('') + '</ul>';
+        })
+        .catch(error => {
+            document.getElementById('file-list').innerHTML = '加载失败：' + error;
+        });
+</script>
+</body>
+</html>
