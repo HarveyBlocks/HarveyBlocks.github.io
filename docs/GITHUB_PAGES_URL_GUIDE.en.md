@@ -1,6 +1,6 @@
 # GitHub Pages Multi-Project URL Routing Guide
 
-[![cn-icon](https://flat.badgen.net/badge/语言/中文/blue?icon=github)](GITHUB_PAGES_URL_GUIDE.zh-CN.md)
+[![cn-icon](https://flat.badgen.net/badge/语言/中文/blue?icon=github)](./GITHUB_PAGES_URL_GUIDE.zh-cn.md)
 
 ## Document Purpose
 

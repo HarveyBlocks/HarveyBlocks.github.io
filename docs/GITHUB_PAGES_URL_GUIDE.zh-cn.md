@@ -1,6 +1,6 @@
 # GitHub Pages 多项目 URL 路由规范指南
 
-[![en-icon](https://flat.badgen.net/badge/language/English/red?icon=github)](GITHUB_PAGES_URL_GUIDE.en.md)
+[![en-icon](https://flat.badgen.net/badge/language/English/red?icon=github)](./GITHUB_PAGES_URL_GUIDE.en.md)
 
 
 ## 文档目的
