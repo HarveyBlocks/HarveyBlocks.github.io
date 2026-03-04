@@ -23,9 +23,9 @@ GitHub Pages 的多项目部署存在以下核心问题：
 假设有以下结构：
 ```
 username.github.io/
-├── github-root/
-│   ├── 404.html          # 全局 404 处理器
-│   └── .nojekyll
+├── 404.html          # 全局 404 处理器
+├── .nojekyll
+│
 ├── project-a/
 │   ├── index.html
 │   └── assets/

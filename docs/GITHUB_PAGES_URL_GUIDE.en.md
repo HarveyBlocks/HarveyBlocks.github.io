@@ -22,9 +22,9 @@ GitHub Pages multi-project deployment has the following core issues:
 Assume the following structure:
 ```
 username.github.io/
-├── github-root/
-│   ├── 404.html          # Global 404 handler
-│   └── .nojekyll
+├── 404.html          # Global 404 handler
+├── .nojekyll
+│
 ├── project-a/
 │   ├── index.html
 │   └── assets/
