@@ -4,6 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Harvey Blocks' Space</title>
+    <script>
+      (function() {
+        try {
+          var storedTheme = localStorage.getItem('theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var shouldUseDark = storedTheme ? storedTheme === 'dark' : prefersDark;
+          if (shouldUseDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
     <!-- Single Page Apps for GitHub Pages -->
     <script type="text/javascript">
       /**
@@ -49,6 +65,7 @@
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
@@ -97,12 +114,12 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="./assets/index-DGP7AGZx.js"></script>
+  <script type="module" crossorigin src="./assets/index-AXxCI0L9.js"></script>
   <link rel="modulepreload" crossorigin href="./assets/vendor-react-CN8MCXWJ.js">
-  <link rel="modulepreload" crossorigin href="./assets/vendor-markdown-BznfBkTa.js">
-  <link rel="modulepreload" crossorigin href="./assets/vendor-utils-DB2jlQsH.js">
-  <link rel="modulepreload" crossorigin href="./assets/vendor-mermaid-C9i9HjiV.js">
-  <link rel="stylesheet" crossorigin href="./assets/index-CL3xNrAo.css">
+  <link rel="modulepreload" crossorigin href="./assets/vendor-markdown-CpOPcrUi.js">
+  <link rel="modulepreload" crossorigin href="./assets/vendor-utils-DOmtcZqK.js">
+  <link rel="modulepreload" crossorigin href="./assets/vendor-mermaid-B0EkJ-qg.js">
+  <link rel="stylesheet" crossorigin href="./assets/index-Dv2-Yve_.css">
 </head>
   <body class="bg-slate-50 text-slate-900 antialiased selection:bg-primary-200 selection:text-primary-900">
     <div id="root"></div>
