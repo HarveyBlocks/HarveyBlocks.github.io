@@ -34,10 +34,10 @@
         /* 图标与文字间距 */
         i {
             margin-right: 0.5rem;
-            color: #586069; /* 灰色调，柔和一些 */
+            color: #586069; /* 灰色 */
         }
         h1 i {
-            color: #0366d6; /* 标题图标用蓝色突出 */
+            color: #0366d6; /* 蓝色 */
         }
     </style>
     <link rel="icon" href="https://avatars.githubusercontent.com/u/153526791?s=400&amp;u=4ee0bbf2a7f7737f5f1503c67547d8dc1eac2a94&amp;v=4" type="image/png">
@@ -50,19 +50,24 @@
     const owner = 'HarveyBlocks';
     const repo = 'HarveyBlocks.github.io';
     const branch = 'main';
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents?ref=${branch}`;
 
     fetch(apiUrl)
-        .then(response => response.json())
-        .then(data => {
-            // Filter folders at the root level:
-            // - type 'tree' means it's a folder
-            // - path contains no slash (directly under root)
-            // - does not start with a dot (exclude hidden folders like .git, .github)
-            const folders = data.tree.filter(item =>
-                item.type === 'tree' &&
-                !item.path.includes('/') &&
-                !item.path.startsWith('.')
+        .then(async response => {
+            const payload = await response.json();
+            if (!response.ok) {
+                const message = payload && payload.message ? payload.message : response.statusText;
+                throw new Error(`GitHub API ${response.status}: ${message}`);
+            }
+            if (!Array.isArray(payload)) {
+                throw new Error('Unexpected API response format');
+            }
+            return payload;
+        })
+        .then(items => {
+            const folders = items.filter(item =>
+                item.type === 'dir' &&
+                !item.name.startsWith('.')
             );
 
             const container = document.getElementById('folder-list');
@@ -70,12 +75,12 @@
                 container.innerHTML = '<p>No folders in root directory</p>';
             } else {
                 container.innerHTML = '<ul>' + folders.map(folder =>
-                    `<li><a href="/${folder.path}/"><i class="fas fa-folder"></i>${folder.path}/</a></li>`
+                    `<li><a href="/${folder.name}/"><i class="fas fa-folder"></i>${folder.name}/</a></li>`
                 ).join('') + '</ul>';
             }
         })
         .catch(error => {
-            document.getElementById('folder-list').innerHTML = 'Failed to load: ' + error;
+            document.getElementById('folder-list').innerHTML = 'Failed to load: ' + error.message;
         });
 </script>
 </body>
