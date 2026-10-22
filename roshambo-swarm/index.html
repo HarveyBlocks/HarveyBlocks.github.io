@@ -1,0 +1,2213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Roshambo Swarm</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+      * {
+          box-sizing: border-box;
+          -webkit-tap-highlight-color: transparent
+      }
+
+      html, body {
+          margin: 0;
+          height: 100%;
+          overflow: hidden;
+          background: #f6f7f9;
+          font-family: -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif
+      }
+
+      #stage {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          overflow: hidden;
+          --s: 1
+      }
+
+      #walls {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0
+      }
+
+      .wall-seg {
+          position: absolute;
+          background: rgba(15, 23, 42, .09)
+      }
+
+      .unit {
+          position: absolute;
+          left: 0;
+          top: 0;
+          z-index: 1;
+          width: calc(24px * var(--s));
+          height: calc(24px * var(--s));
+          margin: calc(-12px * var(--s)) 0 0 calc(-12px * var(--s));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: calc(17px * var(--s));
+          line-height: 1;
+          pointer-events: none;
+          transition: color .3s;
+          will-change: transform
+      }
+
+      .unit i {
+          will-change: transform;
+          transform-origin: 50% 50%
+      }
+
+      .unit.ghost {
+          pointer-events: none;
+          opacity: .85
+      }
+
+      .panel {
+          position: absolute;
+          top: 14px;
+          left: 14px;
+          z-index: 11;
+          width: 224px;
+          padding: 11px 13px 13px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, .88);
+          border: 1px solid rgba(15, 23, 42, .08);
+          box-shadow: 0 6px 20px rgba(15, 23, 42, .06);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          user-select: none;
+          font-size: 12px;
+          color: #334155;
+          transform-origin: top left;
+          will-change: transform
+      }
+
+      .panel.hide {
+          display: none
+      }
+
+      .top {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          padding-bottom: 9px;
+          margin-bottom: 9px;
+          border-bottom: 1px solid rgba(15, 23, 42, .06)
+      }
+
+      .top input[type=range] {
+          flex: 1;
+          min-width: 0
+      }
+
+      .top .val {
+          width: 24px;
+          text-align: right;
+          font-size: 10px;
+          font-weight: 600;
+          color: #64748b;
+          font-variant-numeric: tabular-nums;
+          flex: none
+      }
+
+      .seg {
+          display: flex;
+          gap: 3px;
+          margin-bottom: 8px
+      }
+
+      .seg button {
+          flex: 1;
+          height: 24px;
+          border: 0;
+          border-radius: 6px;
+          background: rgba(15, 23, 42, .04);
+          color: #94a3b8;
+          font-size: 11px;
+          font-weight: 600;
+          font-family: inherit;
+          cursor: pointer;
+          transition: background .15s, color .15s
+      }
+
+      .seg button:hover {
+          color: #475569
+      }
+
+      .seg button.on {
+          background: #0f172a;
+          color: #fff
+      }
+
+      .rows {
+          margin-bottom: 2px
+      }
+
+      .row {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          padding: 6px 0
+      }
+
+      .row + .row {
+          border-top: 1px solid rgba(15, 23, 42, .05)
+      }
+
+      .row i.ic {
+          width: 14px;
+          text-align: center;
+          font-size: 12px;
+          flex: none
+      }
+
+      .row input[type=range] {
+          flex: 1;
+          min-width: 0
+      }
+
+      .row .cnt {
+          width: 20px;
+          text-align: right;
+          font-size: 11px;
+          font-weight: 600;
+          color: #0f172a;
+          font-variant-numeric: tabular-nums;
+          flex: none
+      }
+
+      .row .agg {
+          width: 32px;
+          text-align: right;
+          font-size: 10px;
+          font-weight: 700;
+          font-variant-numeric: tabular-nums;
+          flex: none;
+          letter-spacing: -.2px;
+          transition: color .3s
+      }
+
+      input[type=range] {
+          -webkit-appearance: none;
+          appearance: none;
+          flex: 1;
+          min-width: 0;
+          height: 3px;
+          border-radius: 2px;
+          background: rgba(15, 23, 42, .1);
+          outline: none;
+          cursor: pointer;
+      }
+
+      input[type=range]::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 11px;
+          height: 11px;
+          border-radius: 50%;
+          background: #fff;
+          border: 1px solid rgba(15, 23, 42, .2);
+          box-shadow: 0 1px 2px rgba(15, 23, 42, .15);
+          cursor: pointer;
+      }
+
+      input[type=range]::-moz-range-thumb {
+          width: 11px;
+          height: 11px;
+          border: 1px solid rgba(15, 23, 42, .2);
+          border-radius: 50%;
+          background: #fff;
+          cursor: pointer;
+      }
+
+      input[type=range]::-moz-range-track {
+          height: 3px;
+          border-radius: 2px;
+          background: rgba(15, 23, 42, .1);
+      }
+
+      .controls {
+          display: flex;
+          gap: 5px;
+          margin-top: 11px
+      }
+
+      .controls button {
+          flex: 1;
+          padding: 6px 0;
+          border-radius: 7px;
+          cursor: pointer;
+          border: 1px solid rgba(15, 23, 42, .1);
+          background: #fff;
+          color: #94a3b8;
+          font-size: 11px;
+          font-family: inherit;
+          font-weight: 600;
+          transition: background .15s, color .15s, border-color .15s
+      }
+
+      .controls button:hover {
+          color: #0f172a
+      }
+
+      .controls button.on {
+          background: #0f172a;
+          color: #fff;
+          border-color: #0f172a
+      }
+
+      .controls button.on.go {
+          background: #059669;
+          border-color: #059669
+      }
+
+      .hamb {
+          position: absolute;
+          top: 14px;
+          left: 14px;
+          z-index: 10;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(15, 23, 42, .08);
+          border-radius: 10px;
+          background: rgba(255, 255, 255, .85);
+          color: #64748b;
+          font-size: 12px;
+          cursor: pointer;
+          box-shadow: 0 6px 20px rgba(15, 23, 42, .06);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          transform-origin: top left;
+          will-change: transform, opacity;
+          transition: opacity .15s, color .15s
+      }
+
+      .hamb:hover {
+          color: #0f172a
+      }
+
+      @media (max-width: 520px) {
+          .panel {
+              top: 12px;
+              left: 12px
+          }
+
+          .hamb {
+              top: 12px;
+              left: 12px
+          }
+      }
+  </style>
+</head>
+<body>
+<div id="stage">
+  <div id="walls"></div>
+</div>
+
+<div class="panel hide" id="panel">
+  <div class="top">
+    <input type="range" id="speed" min="0" max="100" value="20">
+    <span class="val" id="speedVal">20</span>
+  </div>
+  <div class="seg" id="seg"></div>
+  <div class="rows" id="rows"></div>
+  <div class="controls">
+    <button id="btnStart">Start</button>
+    <button id="btnStop" class="on">Stop</button>
+    <button id="btnReset">Reset</button>
+  </div>
+</div>
+<button class="hamb" id="hamb" title="Toggle panel">
+  <i class="fa-solid fa-sliders"></i>
+</button>
+
+<script>
+  (function () {
+    'use strict';
+
+    /**
+     * @file Roshambo Swarm
+     *
+     * Three-faction pursuit simulation with mixed solid/open boundaries. The
+     * decision layer never inspects the scene index; it discovers walls only
+     * through probes on the {@link Boundary} class, so the same logic covers
+     * fully open, fully walled, and mixed layouts.
+     */
+
+    /**
+     * Visual metadata for one faction.
+     *
+     * @typedef {Object} FactionStyle
+     * @property {string} icon Font Awesome icon class.
+     * @property {string} color CSS colour applied to the icon.
+     */
+
+    /**
+     * Boundary layout for one scene. Each edge is split into four equal
+     * segments; `true` means the segment is a solid wall.
+     *
+     * @typedef {Object} WallConfig
+     * @property {readonly boolean[]} L Left edge, ordered top to bottom.
+     * @property {readonly boolean[]} R Right edge, ordered top to bottom.
+     * @property {readonly boolean[]} T Top edge, ordered left to right.
+     * @property {readonly boolean[]} B Bottom edge, ordered left to right.
+     */
+
+    const FACTIONS = Object.freeze([
+      {icon: 'fa-solid fa-hand-back-fist', color: '#64748b'},
+      {icon: 'fa-solid fa-hand-scissors', color: '#0284c7'},
+      {icon: 'fa-solid fa-hand', color: '#d97706'}
+    ]);
+
+    const FACTION_COUNT = FACTIONS.length;
+
+    const SCENE_LABELS = Object.freeze({
+      1: 'Fully open',
+      2: 'Fully walled',
+      3: 'Corners walled, edges open',
+      4: 'Corners open, edges walled'
+    });
+
+    const SCENE_WALLS = Object.freeze({
+      1: Object.freeze({
+        L: Object.freeze([false, false, false, false]),
+        R: Object.freeze([false, false, false, false]),
+        T: Object.freeze([false, false, false, false]),
+        B: Object.freeze([false, false, false, false])
+      }),
+      2: Object.freeze({
+        L: Object.freeze([true, true, true, true]),
+        R: Object.freeze([true, true, true, true]),
+        T: Object.freeze([true, true, true, true]),
+        B: Object.freeze([true, true, true, true])
+      }),
+      3: Object.freeze({
+        L: Object.freeze([true, false, false, true]),
+        R: Object.freeze([true, false, false, true]),
+        T: Object.freeze([true, false, false, true]),
+        B: Object.freeze([true, false, false, true])
+      }),
+      4: Object.freeze({
+        L: Object.freeze([false, true, true, false]),
+        R: Object.freeze([false, true, true, false]),
+        T: Object.freeze([false, true, true, false]),
+        B: Object.freeze([false, true, true, false])
+      })
+    });
+
+    /**
+     * Every tunable in one place. Numeric literals elsewhere in the code are
+     * deliberate structural values, not parameters.
+     */
+    const CONFIG = Object.freeze({
+      referenceSize: 760,
+      scaleMin: 0.45,
+      scaleMax: 1.15,
+
+      speedReference: 20,
+      maxFrameDelta: 2.5,
+      damping: 0.9,
+
+      segmentsPerEdge: 4,
+      probeBounces: 4,
+      epsilon: 1e-9,
+      wallThickness: 14,
+      softWallRange: 14,
+      softWallStrength: 4.5,
+      collisionBounce: 0.25,
+
+      cornerSlide: 0.65,
+      cornerInward: 0.35,
+      cornerFacingMin: 0.15,
+
+      unitSize: 24,
+      iconAngleOffset: Math.PI / 2,
+      rotationMinSpeed: 0.12,
+      rotationSmoothMin: 0.18,
+      rotationSmoothMax: 0.42,
+      rotationSpeedNorm: 2,
+
+      perceptionRange: 140,
+      gridCell: 140,
+      dangerDistance: 65,
+      separationRadius: 38,
+      separationWeight: 1.0,
+      separationMax: 8,
+      conversionRadius: 17,
+
+      baseForce: 0.30,
+      mainForceMultiplier: 1.8,
+      maxForce: 2.1,
+      jitter: 0.02,
+
+      maxSpeed: 2.8 / 24,
+      speedScaleMin: 0.35,
+      speedScaleMax: 1.0,
+
+      predictFrames: 14,
+      turnBase: 0.10,
+      turnChase: 0.17,
+      turnFlee: 0.24,
+
+      memoryFrames: 70,
+      memoryMinDistance: 8,
+      wanderRate: 0.14,
+
+      fleeWeightCap: 8,
+      fleeClampFactor: 0.2,
+      scatterWeightMin: 0.08,
+      scatterWeightStep: 0.03,
+      scatterWeightMax: 0.22,
+      scatterRadiusFraction: 0.55,
+      scatterTrigger: 2.0,
+
+      surroundEps: 0.12,
+      openDirectionSamples: 12,
+      openDirectionProbeFactor: 2.2,
+      openDirectionMinFactor: 0.5,
+
+      chaseGlobalDamp: 0.55,
+      chaseSuppressNear: 1.5,
+      chaseSuppressFar: 2.5,
+      chaseDistanceNorm: 0.55,
+      fallbackWeight: 0.05,
+
+      aggressionBase: 3.5,
+      aggressionDown: 0.9,
+      aggressionUp: 1.1,
+      aggressionSelf: 0.7,
+      aggressionSlope: 1.8,
+      aggressionMin: 0.08,
+      aggressionMax: 0.92,
+      aggressionSmooth: 0.97,
+      aggressionSuppressSoft: 0.9,
+
+      ghostSlots: 4,
+      ghostMargin: 1.1
+    });
+
+    /**
+     * Spatial boundary that answers solidity, ray casting and perception
+     * queries. Every wall-related decision the simulation makes goes through
+     * this class.
+     */
+    class Boundary {
+      /**
+       * @param {number} wallThickness Thickness of a solid wall segment.
+       * @param {number} softRange Distance over which the soft wall force acts.
+       */
+      constructor(wallThickness, softRange) {
+        this.width = 0;
+        this.height = 0;
+        this.wallThickness = wallThickness;
+        this.softRange = softRange;
+        this.walls = SCENE_WALLS[1];
+      }
+
+      /**
+       * Updates the stage size used for boundary math.
+       *
+       * @param {number} width Stage width.
+       * @param {number} height Stage height.
+       */
+      resize(width, height) {
+        this.width = width;
+        this.height = height;
+      }
+
+      /**
+       * Updates the scaled physical dimensions of the boundary.
+       *
+       * @param {number} wallThickness Scaled wall thickness.
+       * @param {number} softRange Scaled soft-wall range.
+       */
+      setScale(wallThickness, softRange) {
+        this.wallThickness = wallThickness;
+        this.softRange = softRange;
+      }
+
+      /**
+       * Applies a new wall layout.
+       *
+       * @param {WallConfig} walls Per-edge solid/open configuration.
+       */
+      setWalls(walls) {
+        this.walls = walls;
+      }
+
+      /**
+       * Returns whether the given boundary segment is solid.
+       *
+       * @param {'L'|'R'|'T'|'B'} edge Boundary edge.
+       * @param {number} t Normalised position along the edge, in [0, 1].
+       * @returns {boolean} True when the segment is a wall.
+       */
+      isSolid(edge, t) {
+        if (!Number.isFinite(t)) return false;
+        const clamped = t < 0 ? 0 : t > 1 ? 1 : t;
+        const idx = Math.min(
+          CONFIG.segmentsPerEdge - 1,
+          Math.floor(clamped * CONFIG.segmentsPerEdge)
+        );
+        return this.walls[edge][idx];
+      }
+
+      /**
+       * Casts a ray from `(x, y)` along `angle` and returns the distance to
+       * the first solid segment, letting the ray propagate through open
+       * segments.
+       *
+       * @param {number} x Ray origin X.
+       * @param {number} y Ray origin Y.
+       * @param {number} angle Ray angle in radians.
+       * @returns {number} Distance to the first solid wall, or Infinity.
+       */
+      castRay(x, y, angle) {
+        const dx = Math.cos(angle);
+        const dy = Math.sin(angle);
+        let px = x;
+        let py = y;
+        let total = 0;
+
+        for (let bounce = 0; bounce < CONFIG.probeBounces; bounce++) {
+          const hit = this.#firstHit(px, py, dx, dy);
+          if (!hit) return Infinity;
+
+          total += hit.s;
+          if (this.isSolid(hit.edge, hit.t)) return total;
+
+          if (hit.edge === 'L') px = this.width - CONFIG.epsilon;
+          else if (hit.edge === 'R') px = CONFIG.epsilon;
+          else if (hit.edge === 'T') py = this.height - CONFIG.epsilon;
+          else py = CONFIG.epsilon;
+        }
+
+        return Infinity;
+      }
+
+      /**
+       * Computes the shortest perceivable displacement from `from` to
+       * `(bx, by)`. When the direct segment is blocked by a solid wall, the
+       * function tries mirrored copies of the target across open edges.
+       *
+       * @param {{x: number, y: number}} from Observer position.
+       * @param {number} bx Target X.
+       * @param {number} by Target Y.
+       * @returns {{dx: number, dy: number}} Perceived displacement.
+       */
+      perceiveDelta(from, bx, by) {
+        if (!this.#segmentBlocked(from.x, from.y, bx, by)) {
+          return {dx: bx - from.x, dy: by - from.y};
+        }
+
+        let best = null;
+        let bestDistSq = Infinity;
+
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            if (i === 0 && j === 0) continue;
+
+            const cx = bx + i * this.width;
+            const cy = by + j * this.height;
+            if (this.#segmentBlocked(from.x, from.y, cx, cy)) continue;
+
+            const dx = cx - from.x;
+            const dy = cy - from.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < bestDistSq) {
+              bestDistSq = d2;
+              best = {dx, dy};
+            }
+          }
+        }
+
+        return best ?? {dx: bx - from.x, dy: by - from.y};
+      }
+
+      /**
+       * Computes the perceivable distance between two points.
+       *
+       * @param {{x: number, y: number}} from Observer position.
+       * @param {number} bx Target X.
+       * @param {number} by Target Y.
+       * @returns {number} Perceived distance.
+       */
+      perceiveDist(from, bx, by) {
+        const delta = this.perceiveDelta(from, bx, by);
+        return Math.hypot(delta.dx, delta.dy);
+      }
+
+      /**
+       * Accumulates the soft wall force pushing a point away from nearby
+       * solid segments.
+       *
+       * @param {{x: number, y: number}} p Point to evaluate.
+       * @param {number} strength Base force scale, already scene-scaled.
+       * @returns {{x: number, y: number}} Force delta.
+       */
+      softForce(p, strength) {
+        const magnitude = strength * CONFIG.softWallStrength;
+        const rt = this.wallThickness;
+        const rr = this.softRange;
+        const W = this.width;
+        const H = this.height;
+
+        let fx = 0;
+        let fy = 0;
+
+        if (p.x < rt + rr && this.isSolid('L', p.y / H)) {
+          const d = p.x - rt;
+          if (d < rr) {
+            const k = 1 - Math.max(0, Math.min(rr, d)) / rr;
+            fx += k * k * magnitude;
+          }
+        }
+        if (p.x > W - rt - rr && this.isSolid('R', p.y / H)) {
+          const d = W - rt - p.x;
+          if (d < rr) {
+            const k = 1 - Math.max(0, Math.min(rr, d)) / rr;
+            fx -= k * k * magnitude;
+          }
+        }
+        if (p.y < rt + rr && this.isSolid('T', p.x / W)) {
+          const d = p.y - rt;
+          if (d < rr) {
+            const k = 1 - Math.max(0, Math.min(rr, d)) / rr;
+            fy += k * k * magnitude;
+          }
+        }
+        if (p.y > H - rt - rr && this.isSolid('B', p.x / W)) {
+          const d = H - rt - p.y;
+          if (d < rr) {
+            const k = 1 - Math.max(0, Math.min(rr, d)) / rr;
+            fy -= k * k * magnitude;
+          }
+        }
+
+        return {x: fx, y: fy};
+      }
+
+      /**
+       * Wraps or clamps a unit position depending on whether the crossed edge
+       * segment is open or solid. On solid collisions the normal velocity is
+       * damped.
+       *
+       * @param {{x: number, y: number, vx: number, vy: number}} u Unit to fix.
+       */
+      settle(u) {
+        const W = this.width;
+        const H = this.height;
+        const bounce = CONFIG.collisionBounce;
+
+        if (u.x < 0) {
+          if (this.isSolid('L', u.y / H)) {
+            u.x = 0;
+            if (u.vx < 0) u.vx *= -bounce;
+          } else {
+            u.x += W;
+          }
+        } else if (u.x > W) {
+          if (this.isSolid('R', u.y / H)) {
+            u.x = W;
+            if (u.vx > 0) u.vx *= -bounce;
+          } else {
+            u.x -= W;
+          }
+        }
+
+        if (u.y < 0) {
+          if (this.isSolid('T', u.x / W)) {
+            u.y = 0;
+            if (u.vy < 0) u.vy *= -bounce;
+          } else {
+            u.y += H;
+          }
+        } else if (u.y > H) {
+          if (this.isSolid('B', u.x / W)) {
+            u.y = H;
+            if (u.vy > 0) u.vy *= -bounce;
+          } else {
+            u.y -= H;
+          }
+        }
+      }
+
+      /**
+       * Returns the closest boundary intersection along the ray, or `null`
+       * when the ray never crosses the boundary.
+       *
+       * @param {number} x Ray origin X.
+       * @param {number} y Ray origin Y.
+       * @param {number} dx Ray direction X.
+       * @param {number} dy Ray direction Y.
+       * @returns {{s: number, edge: 'L'|'R'|'T'|'B', t: number} | null}
+       */
+      #firstHit(x, y, dx, dy) {
+        const W = this.width;
+        const H = this.height;
+        const eps = CONFIG.epsilon;
+        let best = null;
+
+        if (dx < -eps) {
+          const s = -x / dx;
+          if (s > eps) {
+            const t = (y + s * dy) / H;
+            if (t >= -eps && t <= 1 + eps) best = {s, edge: 'L', t};
+          }
+        }
+        if (dx > eps) {
+          const s = (W - x) / dx;
+          if (s > eps && (!best || s < best.s)) {
+            const t = (y + s * dy) / H;
+            if (t >= -eps && t <= 1 + eps) best = {s, edge: 'R', t};
+          }
+        }
+        if (dy < -eps) {
+          const s = -y / dy;
+          if (s > eps && (!best || s < best.s)) {
+            const t = (x + s * dx) / W;
+            if (t >= -eps && t <= 1 + eps) best = {s, edge: 'T', t};
+          }
+        }
+        if (dy > eps) {
+          const s = (H - y) / dy;
+          if (s > eps && (!best || s < best.s)) {
+            const t = (x + s * dx) / W;
+            if (t >= -eps && t <= 1 + eps) best = {s, edge: 'B', t};
+          }
+        }
+
+        if (best) best.t = Math.max(0, Math.min(1, best.t));
+        return best;
+      }
+
+      /**
+       * Tests whether the segment from `(x1, y1)` to `(x2, y2)` crosses a
+       * solid boundary segment.
+       *
+       * @param {number} x1 Segment start X.
+       * @param {number} y1 Segment start Y.
+       * @param {number} x2 Segment end X.
+       * @param {number} y2 Segment end Y.
+       * @returns {boolean} True when a solid boundary blocks the segment.
+       */
+      #segmentBlocked(x1, y1, x2, y2) {
+        const W = this.width;
+        const H = this.height;
+        const eps = CONFIG.epsilon;
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+
+        if (dx < -eps) {
+          const s = -x1 / dx;
+          if (s > eps && s < 1 - eps) {
+            const t = (y1 + s * dy) / H;
+            if (t >= 0 && t <= 1 && this.isSolid('L', t)) return true;
+          }
+        }
+        if (dx > eps) {
+          const s = (W - x1) / dx;
+          if (s > eps && s < 1 - eps) {
+            const t = (y1 + s * dy) / H;
+            if (t >= 0 && t <= 1 && this.isSolid('R', t)) return true;
+          }
+        }
+        if (dy < -eps) {
+          const s = -y1 / dy;
+          if (s > eps && s < 1 - eps) {
+            const t = (x1 + s * dx) / W;
+            if (t >= 0 && t <= 1 && this.isSolid('T', t)) return true;
+          }
+        }
+        if (dy > eps) {
+          const s = (H - y1) / dy;
+          if (s > eps && s < 1 - eps) {
+            const t = (x1 + s * dx) / W;
+            if (t >= 0 && t <= 1 && this.isSolid('B', t)) return true;
+          }
+        }
+
+        return false;
+      }
+    }
+
+    /**
+     * A single swarm agent. Everything the unit needs to know about the
+     * environment is reachable through `this.swarm.boundary`.
+     */
+    class Unit {
+      /**
+       * @param {number} faction Faction index.
+       * @param {Swarm} swarm Owning swarm.
+       * @param {HTMLElement} container DOM node that receives the unit nodes.
+       */
+      constructor(faction, swarm, container) {
+        this.swarm = swarm;
+        this.faction = faction;
+
+        const pad = swarm.pad;
+        const usableW = Math.max(1, swarm.width - pad * 2);
+        const usableH = Math.max(1, swarm.height - pad * 2);
+
+        this.x = pad + Math.random() * usableW;
+        this.y = pad + Math.random() * usableH;
+        if (!Number.isFinite(this.x)) this.x = swarm.width * 0.5;
+        if (!Number.isFinite(this.y)) this.y = swarm.height * 0.5;
+
+        const angle = Math.random() * Math.PI * 2;
+        this.vx = Math.cos(angle) * 2;
+        this.vy = Math.sin(angle) * 2;
+        this.heading = angle;
+        this.wander = Math.random() * Math.PI * 2;
+        this.rotation = angle + CONFIG.iconAngleOffset;
+
+        this.target = null;
+        this.claimedBy = null;
+        this.nearestFoeDistance = Infinity;
+        this.memoryX = 0;
+        this.memoryY = 0;
+        this.memoryFrame = -1e9;
+
+        this.prey = [];
+        this.foe = [];
+        this.mate = [];
+
+        this.el = document.createElement('div');
+        this.el.className = 'unit';
+        this.icon = document.createElement('i');
+        this.icon.className = FACTIONS[faction].icon;
+        this.icon.style.transform = `rotate(${this.rotation}rad)`;
+        this.el.appendChild(this.icon);
+        this.el.style.color = FACTIONS[faction].color;
+        this.el.style.transform =
+          `translate3d(${this.x.toFixed(1)}px,${this.y.toFixed(1)}px,0)`;
+        container.appendChild(this.el);
+
+        this.ghosts = [];
+        for (let i = 0; i < CONFIG.ghostSlots; i++) {
+          const g = document.createElement('div');
+          g.className = 'unit ghost';
+          const gi = document.createElement('i');
+          gi.className = FACTIONS[faction].icon;
+          g.appendChild(gi);
+          g.style.color = FACTIONS[faction].color;
+          g.style.display = 'none';
+          container.appendChild(g);
+          this.ghosts.push({el: g, icon: gi});
+        }
+      }
+
+      /**
+       * Converts this unit to another faction and clears transient state.
+       *
+       * @param {number} faction Target faction index.
+       */
+      setFaction(faction) {
+        if (this.faction === faction) return;
+
+        this.faction = faction;
+        this.icon.className = FACTIONS[faction].icon;
+        this.el.style.color = FACTIONS[faction].color;
+
+        for (const g of this.ghosts) {
+          g.icon.className = FACTIONS[faction].icon;
+          g.el.style.color = FACTIONS[faction].color;
+        }
+
+        this.target = null;
+        this.nearestFoeDistance = Infinity;
+        this.memoryFrame = -1e9;
+      }
+
+      /**
+       * Removes every DOM node owned by this unit.
+       */
+      destroy() {
+        this.el.remove();
+        for (const g of this.ghosts) g.el.remove();
+      }
+
+      /**
+       * Clears perception arrays at the start of a frame.
+       */
+      clearPerception() {
+        this.prey.length = 0;
+        this.foe.length = 0;
+        this.mate.length = 0;
+        this.claimedBy = null;
+        this.nearestFoeDistance = Infinity;
+      }
+
+      /**
+       * Records a perceived neighbour under the correct relationship.
+       *
+       * @param {Unit} other The observed unit.
+       * @param {'prey'|'foe'|'mate'} kind Relationship bucket.
+       * @param {number} dx Perceived horizontal displacement.
+       * @param {number} dy Perceived vertical displacement.
+       * @param {number} d Perceived distance.
+       */
+      recordNeighbour(other, kind, dx, dy, d) {
+        this[kind].push({unit: other, dx, dy, d});
+        if (kind === 'foe' && d < this.nearestFoeDistance) {
+          this.nearestFoeDistance = d;
+        }
+      }
+
+      /**
+       * Produces the desired movement direction for this frame.
+       *
+       * @param {number} frame Current swarm frame counter.
+       * @param {number} aggression Aggression value for this unit's faction.
+       * @returns {{dx: number, dy: number, chase: number, flee: number}}
+       */
+      decide(frame, aggression) {
+        const bias = aggression * 2 - 1;
+        const chaseMul = Math.pow(CONFIG.aggressionBase, bias);
+        const fleeMul = Math.pow(CONFIG.aggressionBase, -bias);
+
+        let mixX = 0;
+        let mixY = 0;
+        let chase = 0;
+        let flee = 0;
+
+        if (this.foe.length > 0) {
+          const f = this.#computeFlee(fleeMul);
+          mixX += f.dx;
+          mixY += f.dy;
+          flee = f.weight;
+        }
+
+        if (this.prey.length > 0) {
+          const c = this.#computeChase(frame, aggression, chaseMul);
+          mixX += c.dx;
+          mixY += c.dy;
+          chase = c.weight;
+        }
+
+        if (chase + flee < CONFIG.fallbackWeight) {
+          const fb = this.#computeFallback(frame);
+          mixX += fb.dx;
+          mixY += fb.dy;
+        }
+
+        const mag = Math.hypot(mixX, mixY);
+        if (mag > 1e-4) {
+          mixX /= mag;
+          mixY /= mag;
+        } else {
+          mixX = Math.cos(this.heading);
+          mixY = Math.sin(this.heading);
+        }
+
+        return {dx: mixX, dy: mixY, chase, flee};
+      }
+
+      /**
+       * Applies an intent to the physics simulation.
+       *
+       * @param {{dx: number, dy: number, chase: number, flee: number}} intent
+       * @param {number} dt Frame delta.
+       * @param {number} speedLimit Speed cap for this unit's faction.
+       */
+      act(intent, dt, speedLimit) {
+        const swarm = this.swarm;
+        const boundary = swarm.boundary;
+
+        let turnRate = CONFIG.turnBase;
+        if (intent.flee > intent.chase * 2) turnRate = CONFIG.turnFlee;
+        else if (intent.chase > intent.flee * 2) turnRate = CONFIG.turnChase;
+        else if (intent.chase + intent.flee > 0.1) {
+          turnRate = (CONFIG.turnChase + CONFIG.turnFlee) * 0.5;
+        }
+
+        const want = Math.atan2(intent.dy, intent.dx);
+        let diff = want - this.heading;
+        while (diff > Math.PI) diff -= 2 * Math.PI;
+        while (diff < -Math.PI) diff += 2 * Math.PI;
+        this.heading += Math.max(-turnRate, Math.min(turnRate, diff));
+
+        let fx = Math.cos(this.heading) * swarm.mainForce;
+        let fy = Math.sin(this.heading) * swarm.mainForce;
+
+        const soft = boundary.softForce(this, swarm.baseForce);
+        fx += soft.x;
+        fy += soft.y;
+
+        if (this.mate.length > 0) {
+          const sep = this.#separationForce(swarm.separationRadius, swarm.baseForce);
+          fx += sep.x;
+          fy += sep.y;
+        }
+
+        const mag = Math.hypot(fx, fy);
+        if (mag > swarm.maxForce) {
+          const k = swarm.maxForce / mag;
+          fx *= k;
+          fy *= k;
+        }
+
+        const damp = Math.pow(CONFIG.damping, dt);
+        this.vx = (this.vx + fx * dt) * damp;
+        this.vy = (this.vy + fy * dt) * damp;
+        this.vx += (Math.random() - 0.5) * CONFIG.jitter * swarm.scale * dt;
+        this.vy += (Math.random() - 0.5) * CONFIG.jitter * swarm.scale * dt;
+
+        const speed = Math.hypot(this.vx, this.vy);
+        if (speed > speedLimit) {
+          const k = speedLimit / speed;
+          this.vx *= k;
+          this.vy *= k;
+        }
+
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+
+        boundary.settle(this);
+
+        this.#updateRotation(speed);
+      }
+
+      /**
+       * Repositions ghost projections according to the openness of the edge
+       * segments near the unit.
+       */
+      updateGhosts() {
+        const swarm = this.swarm;
+        const boundary = swarm.boundary;
+        const W = swarm.width;
+        const H = swarm.height;
+        const G = swarm.ghostMargin;
+
+        const openL = !boundary.isSolid('L', this.y / H);
+        const openR = !boundary.isSolid('R', this.y / H);
+        const openU = !boundary.isSolid('T', this.x / W);
+        const openD = !boundary.isSolid('B', this.x / W);
+
+        const positions = [];
+        if (this.x < G && openL) positions.push([this.x + W, this.y]);
+        if (this.x > W - G && openR) positions.push([this.x - W, this.y]);
+        if (this.y < G && openU) positions.push([this.x, this.y + H]);
+        if (this.y > H - G && openD) positions.push([this.x, this.y - H]);
+
+        if (this.x < G && this.y < G && openL && openU) {
+          positions.push([this.x + W, this.y + H]);
+        }
+        if (this.x > W - G && this.y < G && openR && openU) {
+          positions.push([this.x - W, this.y + H]);
+        }
+        if (this.x < G && this.y > H - G && openL && openD) {
+          positions.push([this.x + W, this.y - H]);
+        }
+        if (this.x > W - G && this.y > H - G && openR && openD) {
+          positions.push([this.x - W, this.y - H]);
+        }
+
+        const rot = `rotate(${this.rotation.toFixed(3)}rad)`;
+
+        for (let i = 0; i < this.ghosts.length; i++) {
+          const g = this.ghosts[i];
+          if (i < positions.length) {
+            g.el.style.display = 'flex';
+            g.el.style.transform =
+              `translate3d(${positions[i][0].toFixed(1)}px,` +
+              `${positions[i][1].toFixed(1)}px,0)`;
+            g.icon.style.transform = rot;
+          } else if (g.el.style.display !== 'none') {
+            g.el.style.display = 'none';
+          }
+        }
+      }
+
+      /**
+       * Computes the flee contribution of this frame.
+       *
+       * @param {number} fleeMul Aggression-derived flee multiplier.
+       * @returns {{dx: number, dy: number, weight: number}}
+       */
+      #computeFlee(fleeMul) {
+        const boundary = this.swarm.boundary;
+        const danger = this.swarm.danger;
+        const range = this.swarm.range;
+
+        let fx = 0;
+        let fy = 0;
+        let wsum = 0;
+        for (const f of this.foe) {
+          const w = 1 / (f.d * f.d + 1);
+          wsum += w;
+          fx -= f.dx * w;
+          fy -= f.dy * w;
+        }
+
+        const mag = Math.hypot(fx, fy);
+        if (mag < wsum * CONFIG.surroundEps) {
+          [fx, fy] = this.#openDirection();
+        } else if (mag > 1e-6) {
+          fx /= mag;
+          fy /= mag;
+        } else {
+          fx = Math.cos(this.heading);
+          fy = Math.sin(this.heading);
+        }
+
+        [fx, fy] = this.#avoidWalls(fx, fy);
+
+        if (
+          this.nearestFoeDistance < danger * CONFIG.scatterTrigger &&
+          this.mate.length > 0
+        ) {
+          [fx, fy] = this.#scatter(fx, fy, range);
+        }
+
+        const ratio = danger /
+          Math.max(this.nearestFoeDistance, danger * CONFIG.fleeClampFactor);
+        const weight = Math.min(ratio * ratio, CONFIG.fleeWeightCap) * fleeMul;
+
+        return {dx: fx * weight, dy: fy * weight, weight};
+      }
+
+      /**
+       * Computes the chase contribution of this frame.
+       *
+       * @param {number} frame Current swarm frame counter.
+       * @param {number} aggression Aggression value for this unit's faction.
+       * @param {number} chaseMul Aggression-derived chase multiplier.
+       * @returns {{dx: number, dy: number, weight: number}}
+       */
+      #computeChase(frame, aggression, chaseMul) {
+        this.#selectTarget();
+
+        if (this.target) {
+          this.target.claimedBy = this;
+          this.memoryX = this.target.x;
+          this.memoryY = this.target.y;
+          this.memoryFrame = frame;
+        }
+
+        const danger = this.swarm.danger;
+        const range = this.swarm.range;
+        const near = danger * CONFIG.chaseSuppressNear;
+        const far = danger * CONFIG.chaseSuppressFar;
+
+        let suppress = 0;
+        if (this.nearestFoeDistance > far) suppress = 1;
+        else if (this.nearestFoeDistance > near) {
+          suppress = (this.nearestFoeDistance - near) / (far - near);
+        }
+        suppress += (1 - suppress) * aggression * CONFIG.aggressionSuppressSoft;
+        if (suppress > 1) suppress = 1;
+
+        if (suppress <= 0.02 || !this.target) {
+          return {dx: 0, dy: 0, weight: 0};
+        }
+
+        const t = this.target;
+        const px = t.x + t.vx * CONFIG.predictFrames;
+        const py = t.y + t.vy * CONFIG.predictFrames;
+        const delta = this.swarm.boundary.perceiveDelta(this, px, py);
+        const dist = Math.hypot(delta.dx, delta.dy) || 1;
+        const distFactor = 1 / (1 + dist / (range * CONFIG.chaseDistanceNorm));
+
+        const weight = distFactor * suppress * CONFIG.chaseGlobalDamp * chaseMul;
+        return {
+          dx: (delta.dx / dist) * weight,
+          dy: (delta.dy / dist) * weight,
+          weight
+        };
+      }
+
+      /**
+       * Claims or releases a prey target for this frame.
+       */
+      #selectTarget() {
+        if (this.target) {
+          const stillVisible = this.prey.some(p => p.unit === this.target);
+          const sameFaction = this.target.faction === this.faction;
+          const stolen = this.target.claimedBy &&
+            this.target.claimedBy !== this;
+          if (!stillVisible || sameFaction || stolen) this.target = null;
+        }
+
+        if (this.target) return;
+
+        let best = null;
+        let bestScore = -Infinity;
+        for (const p of this.prey) {
+          if (p.unit.claimedBy && p.unit.claimedBy !== this) continue;
+          const score = 1 / (p.d + 1);
+          if (score > bestScore) {
+            bestScore = score;
+            best = p.unit;
+          }
+        }
+
+        if (!best) {
+          let minD = Infinity;
+          for (const p of this.prey) {
+            if (p.d < minD) {
+              minD = p.d;
+              best = p.unit;
+            }
+          }
+        }
+
+        this.target = best;
+      }
+
+      /**
+       * Computes the fallback direction when both chase and flee are idle.
+       *
+       * @param {number} frame Current swarm frame counter.
+       * @returns {{dx: number, dy: number}}
+       */
+      #computeFallback(frame) {
+        if (frame - this.memoryFrame < CONFIG.memoryFrames) {
+          const delta = this.swarm.boundary.perceiveDelta(
+            this, this.memoryX, this.memoryY
+          );
+          const dist = Math.hypot(delta.dx, delta.dy);
+          if (dist > CONFIG.memoryMinDistance) {
+            return {dx: delta.dx / dist, dy: delta.dy / dist};
+          }
+        }
+
+        this.wander += (Math.random() - 0.5) * CONFIG.wanderRate;
+        return {dx: Math.cos(this.wander), dy: Math.sin(this.wander)};
+      }
+
+      /**
+       * Chooses an escape direction that maximises the distance to the
+       * nearest predator, skipping directions blocked by walls.
+       *
+       * @returns {[number, number]} Unit direction vector.
+       */
+      #openDirection() {
+        const boundary = this.swarm.boundary;
+        const length = this.swarm.danger * CONFIG.openDirectionProbeFactor;
+        const minDist = length * CONFIG.openDirectionMinFactor;
+        const samples = CONFIG.openDirectionSamples;
+
+        let bestX = Math.cos(this.heading);
+        let bestY = Math.sin(this.heading);
+        let bestScore = -Infinity;
+
+        for (let k = 0; k < samples; k++) {
+          const angle = (k * Math.PI * 2) / samples;
+          const ux = Math.cos(angle);
+          const uy = Math.sin(angle);
+
+          if (boundary.castRay(this.x, this.y, angle) < minDist) continue;
+
+          const px = this.x + ux * length;
+          const py = this.y + uy * length;
+          let minD = Infinity;
+          for (const f of this.foe) {
+            const d = boundary.perceiveDist({x: px, y: py}, f.unit.x, f.unit.y);
+            if (d < minD) minD = d;
+          }
+
+          if (minD > bestScore) {
+            bestScore = minD;
+            bestX = ux;
+            bestY = uy;
+          }
+        }
+
+        return [bestX, bestY];
+      }
+
+      /**
+       * Rotates the flee direction so that it slides along nearby walls
+       * instead of pointing into them.
+       *
+       * @param {number} fx Flee direction X.
+       * @param {number} fy Flee direction Y.
+       * @returns {[number, number]} Adjusted direction.
+       */
+      #avoidWalls(fx, fy) {
+        const boundary = this.swarm.boundary;
+        const danger = this.swarm.danger;
+
+        const left = boundary.castRay(this.x, this.y, Math.PI);
+        const right = boundary.castRay(this.x, this.y, 0);
+        const up = boundary.castRay(this.x, this.y, -Math.PI / 2);
+        const down = boundary.castRay(this.x, this.y, Math.PI / 2);
+
+        const nearL = left < danger;
+        const nearR = right < danger;
+        const nearU = up < danger;
+        const nearD = down < danger;
+
+        if (!nearL && !nearR && !nearU && !nearD) return [fx, fy];
+
+        const axisX = nearL || nearR;
+        const axisY = nearU || nearD;
+
+        if (axisX && axisY) {
+          const candidates = [];
+          if (nearL || nearR) candidates.push([0, 1], [0, -1]);
+          if (nearU || nearD) candidates.push([1, 0], [-1, 0]);
+
+          let bestX = 0;
+          let bestY = 0;
+          let bestScore = -Infinity;
+          for (const [cx, cy] of candidates) {
+            if (nearL && cx < 0) continue;
+            if (nearR && cx > 0) continue;
+            if (nearU && cy < 0) continue;
+            if (nearD && cy > 0) continue;
+            const sc = cx * fx + cy * fy;
+            if (sc > bestScore) {
+              bestScore = sc;
+              bestX = cx;
+              bestY = cy;
+            }
+          }
+
+          let ix = 0;
+          let iy = 0;
+          if (nearL) ix = 1; else if (nearR) ix = -1;
+          if (nearU) iy = 1; else if (nearD) iy = -1;
+          const im = Math.hypot(ix, iy) || 1;
+          ix /= im;
+          iy /= im;
+
+          if (bestScore > -Infinity) {
+            fx = bestX * CONFIG.cornerSlide + ix * CONFIG.cornerInward;
+            fy = bestY * CONFIG.cornerSlide + iy * CONFIG.cornerInward;
+          } else {
+            fx = ix;
+            fy = iy;
+          }
+        } else if (axisX) {
+          if (nearL && fx < 0) {
+            if (Math.abs(fy) > CONFIG.cornerFacingMin) {
+              const m = Math.hypot(fx, fy);
+              fy = Math.sign(fy) * m;
+              fx = 0;
+            } else {
+              fx = 1;
+              fy = 0;
+            }
+          } else if (nearR && fx > 0) {
+            if (Math.abs(fy) > CONFIG.cornerFacingMin) {
+              const m = Math.hypot(fx, fy);
+              fy = Math.sign(fy) * m;
+              fx = 0;
+            } else {
+              fx = -1;
+              fy = 0;
+            }
+          }
+        } else if (axisY) {
+          if (nearU && fy < 0) {
+            if (Math.abs(fx) > CONFIG.cornerFacingMin) {
+              const m = Math.hypot(fx, fy);
+              fx = Math.sign(fx) * m;
+              fy = 0;
+            } else {
+              fy = 1;
+              fx = 0;
+            }
+          } else if (nearD && fy > 0) {
+            if (Math.abs(fx) > CONFIG.cornerFacingMin) {
+              const m = Math.hypot(fx, fy);
+              fx = Math.sign(fx) * m;
+              fy = 0;
+            } else {
+              fy = -1;
+              fx = 0;
+            }
+          }
+        }
+
+        const mag = Math.hypot(fx, fy);
+        if (mag > 1e-4) {
+          fx /= mag;
+          fy /= mag;
+        } else {
+          fx = Math.cos(this.heading);
+          fy = Math.sin(this.heading);
+        }
+        return [fx, fy];
+      }
+
+      /**
+       * Adds the lateral scatter component to a flee direction so that
+       * adjacent mates do not converge on the same escape line.
+       *
+       * @param {number} fx Flee direction X.
+       * @param {number} fy Flee direction Y.
+       * @param {number} range Perception range.
+       * @returns {[number, number]} Scattered flee direction.
+       */
+      #scatter(fx, fy, range) {
+        const perpX = -fy;
+        const perpY = fx;
+        const r = range * CONFIG.scatterRadiusFraction;
+        const r2 = r * r;
+        let sx = 0;
+        let sy = 0;
+        let count = 0;
+
+        for (const m of this.mate) {
+          if (m.d * m.d > r2) continue;
+
+          const dot = perpX * m.dx + perpY * m.dy;
+          const w = 1 / (m.d + 1);
+          if (dot > 0) {
+            sx -= perpX * w;
+            sy -= perpY * w;
+          } else {
+            sx += perpX * w;
+            sy += perpY * w;
+          }
+          count++;
+        }
+
+        if (count === 0) return [fx, fy];
+
+        const mag = Math.hypot(sx, sy) || 1;
+        sx /= mag;
+        sy /= mag;
+
+        const weight = Math.min(
+          CONFIG.scatterWeightMin + count * CONFIG.scatterWeightStep,
+          CONFIG.scatterWeightMax
+        );
+
+        const nfx = fx + sx * weight;
+        const nfy = fy + sy * weight;
+        const nm = Math.hypot(nfx, nfy) || 1;
+        return [nfx / nm, nfy / nm];
+      }
+
+      /**
+       * Computes the short-range repulsion from nearby mates.
+       *
+       * @param {number} radius Sampling radius.
+       * @param {number} weight Base separation force.
+       * @returns {{x: number, y: number}} Force delta.
+       */
+      #separationForce(radius, weight) {
+        let sx = 0;
+        let sy = 0;
+        let count = 0;
+
+        for (const m of this.mate) {
+          if (count >= CONFIG.separationMax) break;
+          if (m.d >= radius) continue;
+
+          const w = 1 - m.d / radius;
+          sx += (-m.dx / m.d) * w;
+          sy += (-m.dy / m.d) * w;
+          count++;
+        }
+
+        const mag = Math.hypot(sx, sy);
+        if (mag > 1) {
+          sx /= mag;
+          sy /= mag;
+        }
+
+        return {
+          x: sx * weight * CONFIG.separationWeight,
+          y: sy * weight * CONFIG.separationWeight
+        };
+      }
+
+      /**
+       * Smooths the icon rotation towards the actual velocity direction.
+       *
+       * @param {number} speed Current speed magnitude.
+       */
+      #updateRotation(speed) {
+        if (speed <= CONFIG.rotationMinSpeed) return;
+
+        const target = Math.atan2(this.vy, this.vx) + CONFIG.iconAngleOffset;
+        let d = target - this.rotation;
+        while (d > Math.PI) d -= 2 * Math.PI;
+        while (d < -Math.PI) d += 2 * Math.PI;
+
+        const t = Math.min(1, speed / CONFIG.rotationSpeedNorm);
+        const k = CONFIG.rotationSmoothMin +
+          (CONFIG.rotationSmoothMax - CONFIG.rotationSmoothMin) * t;
+        this.rotation += d * k;
+        this.icon.style.transform = `rotate(${this.rotation}rad)`;
+      }
+    }
+
+    /**
+     * Owns the unit collection, the shared spatial grid and the per-frame
+     * update cycle.
+     */
+    class Swarm {
+      /**
+       * @param {HTMLElement} stage DOM node that receives the unit elements.
+       */
+      constructor(stage) {
+        this.stage = stage;
+        this.boundary = new Boundary(CONFIG.wallThickness, CONFIG.softWallRange);
+        this.units = [];
+        this.counts = [25, 25, 25];
+        this.autoAlpha = [0.5, 0.5, 0.5];
+        this.grid = new Map();
+        this.cellBuffer = [];
+        this.frame = 0;
+        this.currentWalls = SCENE_WALLS[1];
+
+        this.width = 0;
+        this.height = 0;
+        this.scale = 1;
+        this.range = 0;
+        this.gridCell = 0;
+        this.danger = 0;
+        this.separationRadius = 0;
+        this.baseForce = 0;
+        this.maxForce = 0;
+        this.mainForce = 0;
+        this.convertRadius = 0;
+        this.baseSpeed = 0;
+        this.wallThickness = 0;
+        this.softRange = 0;
+        this.pad = 0;
+        this.ghostMargin = 0;
+      }
+
+      /**
+       * Recomputes every scaled parameter from the new stage size.
+       *
+       * @param {number} width Stage width.
+       * @param {number} height Stage height.
+       */
+      resize(width, height) {
+        this.width = width;
+        this.height = height;
+        this.boundary.resize(width, height);
+
+        const m = Math.min(width, height);
+        let s = m / CONFIG.referenceSize;
+        if (!Number.isFinite(s) || s <= 0) s = CONFIG.scaleMin;
+        s = Math.max(CONFIG.scaleMin, Math.min(CONFIG.scaleMax, s));
+        this.scale = s;
+
+        this.unitSize = CONFIG.unitSize * s;
+        this.range = CONFIG.perceptionRange * s;
+        this.gridCell = CONFIG.gridCell * s;
+        this.danger = CONFIG.dangerDistance * s;
+        this.separationRadius = CONFIG.separationRadius * s;
+        this.baseForce = CONFIG.baseForce * s;
+        this.maxForce = CONFIG.maxForce * s;
+        this.mainForce = this.baseForce * CONFIG.mainForceMultiplier;
+        this.convertRadius = CONFIG.conversionRadius * s;
+        this.baseSpeed = CONFIG.maxSpeed * this.unitSize;
+        this.ghostMargin = this.unitSize * CONFIG.ghostMargin;
+        this.wallThickness = CONFIG.wallThickness * s;
+        this.softRange = CONFIG.softWallRange * s;
+        this.pad = this.wallThickness + this.unitSize * 0.5;
+
+        this.boundary.setScale(this.wallThickness, this.softRange);
+      }
+
+      /**
+       * Swaps in a new wall layout.
+       *
+       * @param {WallConfig} walls
+       */
+      setWalls(walls) {
+        this.currentWalls = walls;
+        this.boundary.setWalls(walls);
+      }
+
+      /**
+       * Rebuilds the swarm from the current counts.
+       */
+      rebuild() {
+        for (const u of this.units) u.destroy();
+        this.units = [];
+
+        for (let f = 0; f < FACTION_COUNT; f++) {
+          for (let i = 0; i < this.counts[f]; i++) {
+            this.units.push(new Unit(f, this, this.stage));
+          }
+        }
+
+        this.autoAlpha.fill(0.5);
+      }
+
+      /**
+       * Adds or removes units of one faction so that its population matches
+       * the target.
+       *
+       * @param {number} faction Faction index.
+       * @param {number} target Target count.
+       */
+      syncCount(faction, target) {
+        const current = this.units.filter(u => u.faction === faction);
+
+        if (current.length < target) {
+          for (let i = current.length; i < target; i++) {
+            this.units.push(new Unit(faction, this, this.stage));
+          }
+          return;
+        }
+
+        if (current.length > target) {
+          for (let i = target; i < current.length; i++) {
+            const u = current[i];
+            u.destroy();
+            const idx = this.units.indexOf(u);
+            if (idx >= 0) this.units.splice(idx, 1);
+          }
+        }
+      }
+
+      /**
+       * Advances the simulation by one step.
+       *
+       * @param {number} dt Frame delta expressed in reference frames.
+       */
+      update(dt) {
+        const n = FACTION_COUNT;
+        const frame = ++this.frame;
+        const conversions = [];
+
+        const liveCounts = new Array(n).fill(0);
+        for (const u of this.units) liveCounts[u.faction]++;
+        const total = this.units.length;
+
+        this.#updateAggression(liveCounts, total, dt);
+
+        const speedLimits = new Array(n);
+        for (let f = 0; f < n; f++) {
+          const ratio = total ? liveCounts[f] / total : 0;
+          const sc = CONFIG.speedScaleMin +
+            (CONFIG.speedScaleMax - CONFIG.speedScaleMin) * (1 - ratio);
+          speedLimits[f] = this.baseSpeed * sc;
+        }
+
+        this.#buildGrid();
+        this.#assignNeighbours();
+
+        for (const u of this.units) {
+          const intent = u.decide(frame, this.autoAlpha[u.faction]);
+          u.act(intent, dt, speedLimits[u.faction]);
+
+          for (const p of u.prey) {
+            if (p.d < this.convertRadius) {
+              conversions.push(p.unit, u.faction);
+              break;
+            }
+          }
+
+          u.el.style.transform =
+            `translate3d(${u.x.toFixed(1)}px,${u.y.toFixed(1)}px,0)`;
+          u.updateGhosts();
+        }
+
+        for (let i = 0; i < conversions.length; i += 2) {
+          conversions[i].setFaction(conversions[i + 1]);
+        }
+      }
+
+      /**
+       * Rebuilds the spatial grid and clears per-frame perception state.
+       */
+      #buildGrid() {
+        const nx = Math.max(1, Math.ceil(this.width / this.gridCell));
+        const ny = Math.max(1, Math.ceil(this.height / this.gridCell));
+
+        this.grid.clear();
+
+        for (const u of this.units) {
+          u.clearPerception();
+
+          let gx = Math.floor(u.x / this.gridCell) % nx;
+          if (gx < 0) gx += nx;
+          let gy = Math.floor(u.y / this.gridCell) % ny;
+          if (gy < 0) gy += ny;
+
+          const key = gx * ny + gy;
+          const bucket = this.grid.get(key);
+          if (bucket) bucket.push(u);
+          else this.grid.set(key, [u]);
+        }
+      }
+
+      /**
+       * Populates the prey/foe/mate arrays of every unit by scanning the
+       * surrounding cells.
+       */
+      #assignNeighbours() {
+        const n = FACTION_COUNT;
+        const nx = Math.max(1, Math.ceil(this.width / this.gridCell));
+        const ny = Math.max(1, Math.ceil(this.height / this.gridCell));
+        const rangeSq = this.range * this.range;
+        const boundary = this.boundary;
+
+        for (const a of this.units) {
+          let cx = Math.floor(a.x / this.gridCell) % nx;
+          if (cx < 0) cx += nx;
+          let cy = Math.floor(a.y / this.gridCell) % ny;
+          if (cy < 0) cy += ny;
+
+          this.cellBuffer.length = 0;
+
+          for (let ox = -1; ox <= 1; ox++) {
+            const gx = ((cx + ox) % nx + nx) % nx;
+            for (let oy = -1; oy <= 1; oy++) {
+              const gy = ((cy + oy) % ny + ny) % ny;
+              const key = gx * ny + gy;
+              if (this.cellBuffer.includes(key)) continue;
+              this.cellBuffer.push(key);
+
+              const bucket = this.grid.get(key);
+              if (!bucket) continue;
+
+              for (const b of bucket) {
+                if (b === a) continue;
+
+                const delta = boundary.perceiveDelta(a, b.x, b.y);
+                const d2 = delta.dx * delta.dx + delta.dy * delta.dy;
+                if (d2 > rangeSq) continue;
+
+                const d = Math.sqrt(d2) || 1e-6;
+                const rel = (b.faction - a.faction + n) % n;
+
+                if (rel === 1) a.recordNeighbour(b, 'prey', delta.dx, delta.dy, d);
+                else if (rel === n - 1) a.recordNeighbour(b, 'foe', delta.dx, delta.dy, d);
+                else a.recordNeighbour(b, 'mate', delta.dx, delta.dy, d);
+              }
+            }
+          }
+        }
+      }
+
+      /**
+       * Updates per-faction aggression from current population ratios.
+       *
+       * @param {number[]} liveCounts Live count per faction.
+       * @param {number} total Total population.
+       * @param {number} dt Frame delta.
+       */
+      #updateAggression(liveCounts, total, dt) {
+        if (total <= 0) return;
+
+        const n = FACTION_COUNT;
+        const baseline = 1 / n;
+        const eps = 0.05;
+        const k = 1 - Math.pow(CONFIG.aggressionSmooth, dt);
+
+        for (let f = 0; f < n; f++) {
+          const self = Math.max(liveCounts[f] / total / baseline, eps);
+          const up = Math.max(liveCounts[(f - 1 + n) % n] / total / baseline, eps);
+          const down = Math.max(liveCounts[(f + 1) % n] / total / baseline, eps);
+
+          const signal =
+            CONFIG.aggressionDown * Math.log(down) -
+            CONFIG.aggressionUp * Math.log(up) -
+            CONFIG.aggressionSelf * Math.log(self);
+
+          const target = 1 / (1 + Math.exp(-CONFIG.aggressionSlope * signal));
+          const next = this.autoAlpha[f] + (target - this.autoAlpha[f]) * k;
+          this.autoAlpha[f] = Math.max(
+            CONFIG.aggressionMin,
+            Math.min(CONFIG.aggressionMax, next)
+          );
+        }
+      }
+    }
+
+    /**
+     * Binds the swarm to the UI and drives the animation loop.
+     */
+    class App {
+      constructor() {
+        this.swarm = new Swarm(stage);
+        this.running = false;
+        this.speed = CONFIG.speedReference;
+        this.scene = 1;
+        this.lastT = 0;
+        this.frame = 0;
+        this.booted = false;
+        this.bootAttempts = 0;
+        this.width = 0;
+        this.height = 0;
+        this.hideTimer = null;
+        this.badges = [];
+        this.alphaDisplay = [];
+      }
+
+      /**
+       * Boots the application once the stage reports a valid size.
+       */
+      init() {
+        this.#bindPanel();
+        this.#bindControls();
+        this.#boot();
+      }
+
+      #boot() {
+        this.#measure();
+
+        if (this.width <= 0 || this.height <= 0) {
+          this.bootAttempts++;
+          if (this.bootAttempts < 30) {
+            requestAnimationFrame(() => this.#boot());
+            return;
+          }
+          this.width = window.innerWidth || 375;
+          this.height = window.innerHeight || 667;
+        }
+
+        if (this.booted) return;
+        this.booted = true;
+
+        this.#applyScale();
+        this.#applyPanelScale();
+        this.#renderScenes();
+        this.#renderList();
+        this.swarm.rebuild();
+        this.#setRunning(false);
+        requestAnimationFrame(this.#loop);
+      }
+
+      #measure() {
+        this.width = stage.clientWidth || window.innerWidth || 0;
+        this.height = stage.clientHeight || window.innerHeight || 0;
+        if (this.width < 10) this.width = window.innerWidth || 375;
+        if (this.height < 10) this.height = window.innerHeight || 667;
+      }
+
+      #applyScale() {
+        this.swarm.resize(this.width, this.height);
+        stage.style.setProperty('--s', this.swarm.scale.toFixed(3));
+        this.#rebuildWalls();
+      }
+
+      #applyPanelScale() {
+        const m = Math.min(this.width, this.height);
+        const ps = Math.max(0.95, Math.min(1.45, m / 780));
+        const t = `scale(${ps.toFixed(3)})`;
+        panelEl.style.transform = t;
+        hambBtn.style.transform = t;
+      }
+
+      #rebuildWalls() {
+        wallsEl.innerHTML = '';
+
+        const W = this.width;
+        const H = this.height;
+        const thickness = this.swarm.wallThickness;
+        if (W <= 0 || H <= 0) return;
+
+        const walls = this.swarm.currentWalls;
+        const segments = CONFIG.segmentsPerEdge;
+
+        for (const edge of ['L', 'R', 'T', 'B']) {
+          const segs = walls[edge];
+
+          for (let i = 0; i < segments; i++) {
+            if (!segs[i]) continue;
+
+            const t0 = i / segments;
+            const t1 = (i + 1) / segments;
+            const div = document.createElement('div');
+            div.className = 'wall-seg';
+
+            if (edge === 'L') {
+              div.style.left = '0';
+              div.style.top = `${(t0 * H).toFixed(2)}px`;
+              div.style.width = `${thickness.toFixed(2)}px`;
+              div.style.height = `${((t1 - t0) * H).toFixed(2)}px`;
+            } else if (edge === 'R') {
+              div.style.right = '0';
+              div.style.top = `${(t0 * H).toFixed(2)}px`;
+              div.style.width = `${thickness.toFixed(2)}px`;
+              div.style.height = `${((t1 - t0) * H).toFixed(2)}px`;
+            } else if (edge === 'T') {
+              div.style.top = '0';
+              div.style.left = `${(t0 * W).toFixed(2)}px`;
+              div.style.height = `${thickness.toFixed(2)}px`;
+              div.style.width = `${((t1 - t0) * W).toFixed(2)}px`;
+            } else {
+              div.style.bottom = '0';
+              div.style.left = `${(t0 * W).toFixed(2)}px`;
+              div.style.height = `${thickness.toFixed(2)}px`;
+              div.style.width = `${((t1 - t0) * W).toFixed(2)}px`;
+            }
+
+            wallsEl.appendChild(div);
+          }
+        }
+      }
+
+      #renderScenes() {
+        segEl.innerHTML = '';
+
+        for (const id of Object.keys(SCENE_LABELS).map(Number)) {
+          const b = document.createElement('button');
+          b.textContent = String(id);
+          b.dataset.s = String(id);
+          b.title = SCENE_LABELS[id];
+          b.addEventListener('click', () => {
+            if (id !== this.scene) this.#setScene(id);
+          });
+          segEl.appendChild(b);
+        }
+
+        this.#paintScenes();
+      }
+
+      #paintScenes() {
+        segEl.querySelectorAll('button').forEach(b => {
+          b.classList.toggle('on', Number(b.dataset.s) === this.scene);
+        });
+      }
+
+      #renderList() {
+        rowsEl.innerHTML = '';
+        this.badges = [];
+        this.alphaDisplay = [];
+
+        for (let f = 0; f < FACTION_COUNT; f++) {
+          const row = document.createElement('div');
+          row.className = 'row';
+
+          const ic = document.createElement('i');
+          ic.className = `ic ${FACTIONS[f].icon}`;
+          ic.style.color = FACTIONS[f].color;
+
+          const slider = document.createElement('input');
+          slider.type = 'range';
+          slider.min = '0';
+          slider.max = '60';
+          slider.value = String(this.swarm.counts[f]);
+
+          const countLabel = document.createElement('span');
+          countLabel.className = 'cnt';
+          countLabel.textContent = String(this.swarm.counts[f]);
+
+          slider.addEventListener('input', () => {
+            const v = Number(slider.value);
+            this.swarm.counts[f] = v;
+            this.swarm.syncCount(f, v);
+            countLabel.textContent = String(v);
+          });
+
+          const alphaLabel = document.createElement('span');
+          alphaLabel.className = 'agg';
+          alphaLabel.textContent = this.swarm.autoAlpha[f].toFixed(2);
+
+          row.append(ic, slider, countLabel, alphaLabel);
+          rowsEl.appendChild(row);
+          this.badges.push(countLabel);
+          this.alphaDisplay.push(alphaLabel);
+        }
+
+        this.#refreshCounters();
+      }
+
+      #setScene(s) {
+        if (this.scene === s) return;
+
+        this.#setRunning(false);
+        this.scene = s;
+        this.swarm.setWalls(SCENE_WALLS[s]);
+        this.#paintScenes();
+
+        this.#measure();
+        this.#applyScale();
+        this.lastT = 0;
+        this.swarm.rebuild();
+      }
+
+      #setRunning(r) {
+        this.running = r;
+        startBtn.classList.toggle('on', r);
+        startBtn.classList.toggle('go', r);
+        stopBtn.classList.toggle('on', !r);
+      }
+
+      #loop = (t) => {
+        try {
+          if (!this.lastT) this.lastT = t;
+
+          let dt = (t - this.lastT) / 16.6667;
+          this.lastT = t;
+          dt *= this.speed / CONFIG.speedReference;
+          dt = Math.max(0, Math.min(CONFIG.maxFrameDelta, dt));
+
+          if (dt > 0 && this.running) {
+            try {
+              this.swarm.update(dt);
+            } catch (err) {
+              console.error('update error:', err);
+            }
+          }
+
+          if (++this.frame % 5 === 0) this.#refreshCounters();
+        } catch (err) {
+          console.error('loop error:', err);
+        } finally {
+          requestAnimationFrame(this.#loop);
+        }
+      };
+
+      #refreshCounters() {
+        const live = new Array(FACTION_COUNT).fill(0);
+        for (const u of this.swarm.units) {
+          if (u.faction < FACTION_COUNT) live[u.faction]++;
+        }
+
+        for (let f = 0; f < FACTION_COUNT; f++) {
+          if (this.badges[f]) this.badges[f].textContent = String(live[f]);
+        }
+
+        this.#refreshAggression();
+      }
+
+      #refreshAggression() {
+        for (let f = 0; f < FACTION_COUNT; f++) {
+          const el = this.alphaDisplay[f];
+          if (!el) continue;
+
+          const v = this.swarm.autoAlpha[f];
+          el.textContent = v.toFixed(2);
+          el.style.color = this.#aggressionColor(v);
+        }
+      }
+
+      #aggressionColor(a) {
+        const t = a < 0.5 ? a * 2 : (a - 0.5) * 2;
+        const r = a < 0.5 ? 2 + (100 - 2) * t : 100 + (225 - 100) * t;
+        const g = a < 0.5 ? 132 + (116 - 132) * t : 116 + (29 - 116) * t;
+        const b = a < 0.5 ? 199 + (139 - 199) * t : 139 + (72 - 139) * t;
+        return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+      }
+
+      #bindPanel() {
+        const hasHover = window.matchMedia('(hover: hover)').matches;
+
+        const show = () => {
+          if (this.hideTimer) {
+            clearTimeout(this.hideTimer);
+            this.hideTimer = null;
+          }
+          if (panelEl.classList.contains('hide')) {
+            panelEl.classList.remove('hide');
+            hambBtn.style.opacity = '0';
+            hambBtn.style.pointerEvents = 'none';
+          }
+        };
+
+        const hide = () => {
+          if (this.hideTimer) {
+            clearTimeout(this.hideTimer);
+            this.hideTimer = null;
+          }
+          if (!panelEl.classList.contains('hide')) {
+            panelEl.classList.add('hide');
+            hambBtn.style.opacity = '1';
+            hambBtn.style.pointerEvents = 'auto';
+          }
+        };
+
+        const scheduleHide = () => {
+          if (this.hideTimer) clearTimeout(this.hideTimer);
+          this.hideTimer = setTimeout(() => {
+            this.hideTimer = null;
+            if (!panelEl.matches(':hover')) hide();
+          }, 300);
+        };
+
+        if (hasHover) {
+          hambBtn.addEventListener('mouseenter', show);
+          hambBtn.addEventListener('mouseleave', scheduleHide);
+          panelEl.addEventListener('mouseenter', () => {
+            if (this.hideTimer) {
+              clearTimeout(this.hideTimer);
+              this.hideTimer = null;
+            }
+          });
+          panelEl.addEventListener('mouseleave', scheduleHide);
+          return;
+        }
+
+        hambBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          if (panelEl.classList.contains('hide')) show();
+          else hide();
+        });
+        document.addEventListener('click', e => {
+          if (!panelEl.contains(e.target) && !hambBtn.contains(e.target)) hide();
+        });
+      }
+
+      #bindControls() {
+        startBtn.addEventListener('click', () => this.#setRunning(true));
+        stopBtn.addEventListener('click', () => this.#setRunning(false));
+        resetBtn.addEventListener('click', () => {
+          this.#setRunning(false);
+          this.swarm.rebuild();
+        });
+
+        speedIn.addEventListener('input', () => {
+          this.speed = Number(speedIn.value);
+          speedVal.textContent = String(this.speed);
+        });
+
+        window.addEventListener('resize', () => {
+          this.#measure();
+          if (this.width <= 0 || this.height <= 0) return;
+
+          this.#applyScale();
+          this.#applyPanelScale();
+
+          for (const u of this.swarm.units) {
+            u.x = Math.max(this.swarm.pad,
+              Math.min(this.width - this.swarm.pad, u.x));
+            u.y = Math.max(this.swarm.pad,
+              Math.min(this.height - this.swarm.pad, u.y));
+          }
+        });
+
+        window.addEventListener('orientationchange', () => {
+          setTimeout(() => {
+            this.#measure();
+            if (this.width <= 0 || this.height <= 0) return;
+            this.#applyScale();
+            this.#applyPanelScale();
+          }, 120);
+        });
+      }
+    }
+
+    const stage = document.getElementById('stage');
+    const wallsEl = document.getElementById('walls');
+    const segEl = document.getElementById('seg');
+    const rowsEl = document.getElementById('rows');
+    const resetBtn = document.getElementById('btnReset');
+    const startBtn = document.getElementById('btnStart');
+    const stopBtn = document.getElementById('btnStop');
+    const panelEl = document.getElementById('panel');
+    const hambBtn = document.getElementById('hamb');
+    const speedIn = document.getElementById('speed');
+    const speedVal = document.getElementById('speedVal');
+
+    new App().init();
+
+  })();
+</script>
+</body>
+</html>
