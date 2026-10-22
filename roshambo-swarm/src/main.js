@@ -10,7 +10,6 @@ import { SCENE_WALLS } from './config/factions.js';
 import { SwarmEngine } from './core/SwarmEngine.js';
 import { WallRenderer } from './ui/WallRenderer.js';
 import { PanelController } from './ui/PanelController.js';
-import './styles/index.css';
 
 /**
  * Main application coordinator class.
