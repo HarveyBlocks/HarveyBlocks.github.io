@@ -1,0 +1,249 @@
+/**
+ * @fileoverview Floating control panel, glassmorphism UI, range sliders, and hamburger button.
+ */
+
+.panel {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 11;
+  width: 224px;
+  padding: 11px 13px 13px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  user-select: none;
+  font-size: 12px;
+  color: #334155;
+  transform-origin: top left;
+  will-change: transform;
+}
+
+.panel.hide {
+  display: none;
+}
+
+.top {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-bottom: 9px;
+  margin-bottom: 9px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.top input[type="range"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.top .val {
+  width: 24px;
+  text-align: right;
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+.seg {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.seg button {
+  flex: 1;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.04);
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.seg button:hover {
+  color: #475569;
+}
+
+.seg button.on {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.rows {
+  margin-bottom: 2px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 0;
+}
+
+.row + .row {
+  border-top: 1px solid rgba(15, 23, 42, 0.05);
+}
+
+.row i.ic {
+  width: 14px;
+  text-align: center;
+  font-size: 12px;
+  flex: none;
+}
+
+.row input[type="range"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.row .cnt {
+  width: 20px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+.row .agg {
+  width: 32px;
+  text-align: right;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+  letter-spacing: -0.2px;
+  transition: color 0.3s ease;
+}
+
+/* Range input cross-browser styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(15, 23, 42, 0.1);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.15);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.controls {
+  display: flex;
+  gap: 5px;
+  margin-top: 11px;
+}
+
+.controls button {
+  flex: 1;
+  padding: 6px 0;
+  border-radius: 7px;
+  cursor: pointer;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #ffffff;
+  color: #94a3b8;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.controls button:hover {
+  color: #0f172a;
+}
+
+.controls button.on {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+}
+
+.controls button.on.go {
+  background: #059669;
+  border-color: #059669;
+}
+
+/* Floating Hamburger Trigger */
+.hamb {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transform-origin: top left;
+  will-change: transform, opacity;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.hamb:hover {
+  color: #0f172a;
+}
+
+@media (max-width: 520px) {
+  .panel {
+    top: 12px;
+    left: 12px;
+  }
+
+  .hamb {
+    top: 12px;
+    left: 12px;
+  }
+}

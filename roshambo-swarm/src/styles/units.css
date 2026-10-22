@@ -1,0 +1,32 @@
+/**
+ * @fileoverview Swarm unit styling and toroidal ghost clone projections.
+ */
+
+.unit {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  width: calc(24px * var(--s, 1));
+  height: calc(24px * var(--s, 1));
+  margin: calc(-12px * var(--s, 1)) 0 0 calc(-12px * var(--s, 1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(17px * var(--s, 1));
+  line-height: 1;
+  pointer-events: none;
+  transition: color 0.3s ease;
+  will-change: transform;
+}
+
+.unit i {
+  will-change: transform;
+  transform-origin: 50% 50%;
+  display: inline-block;
+}
+
+.unit.ghost {
+  pointer-events: none;
+  opacity: 0.85;
+}
